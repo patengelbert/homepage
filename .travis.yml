@@ -1,0 +1,13 @@
+language: node_js
+node_js:
+- '7'
+before_script:
+- npm install -g gulp bower
+script:
+- gulp test
+- gulp test:css
+cache:
+  directories:
+  - node_modules
+addons:
+  srcclr: true
