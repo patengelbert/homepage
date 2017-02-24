@@ -11,3 +11,11 @@ cache:
   - node_modules
 addons:
   srcclr: true
+deploy:
+  provider: heroku
+  api_key:
+    secure: Gqrug7gLbShS0LhSQYEcqYtV0UDMKTKZPeweKtuFR+Win3YY3/KxR2Go14BpaMMdkP43xP7yhc8rI9iaa2KU2ZisgeaWktl05G0J/xRb4rJmdFRjqs8u2OJfclIvIVKUUOsIZaZmcetRjmEEVOsAVTFRYPimn0goVuvtN8hUoM/1bn4y4KVLG7G8R6Nv04JEd4wQNgT6tUeImkhk+ShON+gRuSe8/b0hzvX5PBnPpGc2yDJ6WF2kYdhZXref/LfwXnRp0KOtFdNVRawJIejAXr0wuystXYU8Y7rMPxtlMRCBbM/yoLVLKnIV1sRR3E0ctMoUMNOl2GHpYuTzT72HCs10U837bOd+dMBat+TmYnfs0OsgXRENjdfgjTpy6xfbpbzSagJY8BEVrJ+g2yWe4JHR4C8MWMVUAl8D+H52WUJ36Yp1MV4fWW4AhuhMAFCQ+seOTfZC7ppbqRcYR/gOtD60pnsAger4qVyOu989M7BK5ItPqRdl2Zt3XQBlAZHg8iiOvDxhRiBgT3qdNgnlRN6m2O1Y5kKA/pEn0UDUPrQEViADdYUUP4zOQdfBjmZfMFaDunMLyqfMXqlQ0xhhIKDPfp8lJH9agTuQSP5Au5ukuIaz/+Dtijv7s3z17Gt4en0Uw+mX54NzQZXIAKhzVujlka7QiIn38BYYH70PVwk=
+  app: patrick-webpage-staging
+  on:
+    repo: patengelbert/homepage
+    branch: master

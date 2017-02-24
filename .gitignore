@@ -8,3 +8,5 @@ backstop_data/*/
 !backstop_data/casper_scripts
 
 *.log
+
+.vscode/
