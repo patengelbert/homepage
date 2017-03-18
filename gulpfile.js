@@ -167,7 +167,7 @@ gulp.task('test:css:showreport', () =>
 
 gulp.task('test:js', (done) => {
   new karma.Server({
-    configFile: __dirname + '/karma.conf.js',
+    configFile: path.join(__dirname, 'karma.conf.js'),
     singleRun: true
   }, () => {
     done();
@@ -181,7 +181,7 @@ gulp.task('test', ['test:js']);
  */
 gulp.task('test:js:server', (done) => {
   new karma.Server({
-    configFile: __dirname + '/karma.conf.js'
+    configFile: path.join(__dirname, 'karma.conf.js')
   }, () => {
     done();
   }).start();
