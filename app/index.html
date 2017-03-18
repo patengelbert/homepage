@@ -9,17 +9,14 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <!-- Place favicon.ico in the root directory -->
 
-    <!-- build:css styles/vendor.css -->
     <!-- bower:css -->
-    <!-- endbower -->
-    <!-- endbuild -->
-
-    <!-- build:css styles/main.css -->
-    <link rel="stylesheet" href="styles/main.css">
-    <!-- endbuild -->
+    <!-- bower installed css files will go here... -->
+    <!-- endinject -->
+    <!-- inject:css -->
+    <!-- endinject -->
     
   </head>
-  <body onload="insertText();">
+  <body>
     <!--[if IE]>
       <p class="browserupgrade">You are using an <strong>outdated</strong> browser.</p>
     <![endif]-->
@@ -32,13 +29,11 @@
       </ul>
     </div>
 
-    <!-- build:js scripts/vendor.js -->
     <!-- bower:js -->
-    <!-- endbower -->
-    <!-- endbuild -->
+    <!-- bower installed scripts will go here... -->
+    <!-- endinject -->
     
-    <!-- build:js scripts/main.js -->
-    <script src="scripts/main.js"></script>
-    <!-- endbuild -->
+    <!-- inject:js -->
+    <!-- endinject -->
   </body>
 </html>

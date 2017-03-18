@@ -1,9 +1,16 @@
 module.exports = function(config) {
   config.set({
     client: {captureConsole: false},
-    frameworks: ['mocha', 'chai'],
+    frameworks: ['browserify', 'mocha', 'chai'],
     browsers: ['PhantomJS'],
-    files: ['app/scripts/**/*.js', 'test/**/*.js'],
-    reporters: ['dots']
+    preprocessors:
+        {'app/**/*.js': ['browserify'], 'test/**/*.js': ['browserify']},
+    files: [
+      'node_modules/babel-polyfill/dist/polyfill.js',
+      'app/scripts/**/*.js',
+      'test/**/*.js'
+    ],
+    reporters: ['dots'],
+    browserify: {debug: true, transform: ["babelify"]}
   });
 };
