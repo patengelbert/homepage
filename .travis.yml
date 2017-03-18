@@ -5,7 +5,6 @@ before_script:
 - npm install -g gulp bower
 script:
 - gulp test
-- gulp test:css
 cache:
   directories:
   - node_modules
