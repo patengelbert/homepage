@@ -1,0 +1,42 @@
+//colors
+$color_celeste_approx: #ccc;
+$black: #000;
+$alabaster: #fafafa;
+$color_mine_shaft_approx: #333;
+$color_gallery_approx: #eee;
+
+//fonts
+$font_0: Helvetica Neue;
+$font_1: Helvetica;
+$font_2: Arial;
+$font_3: sans-serif;
+
+.browserupgrade {
+	margin: 0.2em 0;
+	background: $color_celeste_approx;
+	color: $black;
+	padding: 0.2em 0;
+}
+
+body {
+	background: $alabaster;
+	font-family: $font_0, $font_1, $font_2, $font_3;
+	color: $color_mine_shaft_approx;
+}
+
+.hero-unit {
+	margin: 50px auto 0 auto;
+	width: 300px;
+	font-size: 18px;
+	font-weight: 200;
+	line-height: 30px;
+	background-color: $color_gallery_approx;
+	//Instead of the line below you could use @include border-radius($radius, $vertical-radius)
+	border-radius: 6px;
+	padding: 60px;
+	h1 {
+		font-size: 60px;
+		line-height: 1;
+		letter-spacing: -1px;
+	}
+}

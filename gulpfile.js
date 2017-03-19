@@ -24,7 +24,8 @@ if (dev) {
 }
 
 gulp.task('styles', () => {
-  return gulp.src('app/styles/*.css')
+  return gulp.src(['app/styles/*.css', 'app/styles/*.scss'])
+    .pipe($.if(/\.scss$/, $.sass().on('error', $.sass.logError)))
     .pipe($.if(dev, $.sourcemaps.init()))
     .pipe($.autoprefixer({browsers: ['> 1%', 'last 2 versions', 'Firefox ESR']}))
     .pipe($.if(dev, $.sourcemaps.write()))
@@ -135,7 +136,7 @@ gulp.task('serve', () => {
     ]).on('change', reload);
 
     gulp.watch('app/**/*.html', ['html']);    
-    gulp.watch('app/styles/**/*.css', ['styles']);
+    gulp.watch(['app/styles/**/*.css', 'app/styles/**/*.scss'], ['styles']);
     gulp.watch('app/scripts/**/*.js', ['scripts']);
     gulp.watch('app/fonts/**/*', ['fonts']);
     gulp.watch('bower.json', ['wiredep', 'fonts']);
