@@ -16,6 +16,11 @@ const merge = require('merge');
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
 
+const srcDir = 'app';
+const testDir = 'test';
+const devDir = '.tmp';
+const prodDir = 'dist';
+
 const dev = !util.env.production;
 
 if (dev) {
@@ -30,7 +35,7 @@ var getBundleName = function (min = false) {
 };
 
 gulp.task('styles', ['lint:styles'], () => {
-  return gulp.src('app/styles/*.{css,scss}')
+  return gulp.src(path.join(srcDir, 'styles', '*.{css,scss}'))
     .pipe($.plumber())
     .pipe($.if(/\.scss$/, $.sass().on('error', $.sass.logError)))
     .pipe($.if(dev, $.sourcemaps.init()))
@@ -38,12 +43,12 @@ gulp.task('styles', ['lint:styles'], () => {
     .pipe($.if(!dev, $.cssnano({ safe: true, autoprefixer: false })))
     .pipe($.if(dev, $.sourcemaps.write()))
     .pipe($.rename(getBundleName(!dev) + '.css'))
-    .pipe(gulp.dest(path.join((dev ? '.tmp' : 'dist'), 'styles')))
+    .pipe(gulp.dest(path.join((dev ? devDir : prodDir), 'styles')))
     .pipe(reload({stream: true}));
 });
 
 gulp.task('scripts', ['lint:scripts'], () => {
-  return browserify({ entries: 'app/scripts/app.js', debug: dev })
+  return browserify({ entries: path.join(srcDir, 'scripts', 'app.js'), debug: dev })
     .transform(rollupify, babelify)
     .bundle()
     .on('error', function (err) {
@@ -57,7 +62,7 @@ gulp.task('scripts', ['lint:scripts'], () => {
     .pipe($.if(!dev, $.uglify({ compress: { drop_console: true } })))
     .pipe($.concat(getBundleName(!dev) + '.js'))
     .pipe($.if(dev, $.sourcemaps.write('.')))
-    .pipe(gulp.dest(path.join((dev ? '.tmp' : 'dist'), 'scripts')))
+    .pipe(gulp.dest(path.join((dev ? devDir : prodDir), 'scripts')))
     .pipe(reload({ stream: true }));
 });
 
@@ -70,12 +75,12 @@ function lint(files, param = {}) {
 }
 
 gulp.task('lint:scripts', () => {
-  return lint(['app/**/*.{js, jsx}'])
-    .pipe(gulp.dest('app'));
+  return lint(path.join(srcDir, '**', '*.{js, jsx}'))
+    .pipe(gulp.dest(srcDir));
 });
 
 gulp.task('lint:html', () => {
-  return gulp.src('app/**/*.html')
+  return gulp.src(path.join(srcDir, '**', '*.html'))
     .pipe($.htmlLint())
     .pipe($.htmlLint.format())
     .pipe($.if(!browserSync.active, $.htmlLint.failAfterError()))
@@ -83,11 +88,11 @@ gulp.task('lint:html', () => {
     .pipe(reload({ stream: true, once: true }))
     .pipe($.eslint.format())
     .pipe($.if(!browserSync.active, $.eslint.failAfterError()))
-    .pipe(gulp.dest('app'));
+    .pipe(gulp.dest(srcDir));
 });
 
 gulp.task('lint:styles', () => {
-  return gulp.src('app/**/*.{css,scss}')
+  return gulp.src(path.join(srcDir, '**', '*.{css, scss}'))
     .pipe($.stylelint({
       reporters: [
         { formatter: 'string', console: true }
@@ -97,28 +102,21 @@ gulp.task('lint:styles', () => {
     }))
     .pipe(reload({ stream: true, once: true }))
     .pipe($.stylefmt())
-    .pipe(gulp.dest('app'));
+    .pipe(gulp.dest(srcDir));
 });
 
 gulp.task('lint:test', () => {
-  return lint('test/spec/**/*.{js, jsx}', {envs: ['mocha']})
-    .pipe(gulp.dest('test/spec'));
+  return lint(path.join(testDir, 'spec', '**', '*.{js, jsx}'), {envs: ['mocha']})
+    .pipe(gulp.dest(path.join(testDir, 'spec')));
 });
 
 gulp.task('lint', ['lint:styles', 'lint:scripts', 'lint:html']);
 
 gulp.task('html', ['lint', 'styles', 'scripts'], () => {
-  return gulp.src('app/**/*.html')
-    .pipe($.inject(gulp.src(['.tmp/**/*.js', '.tmp/**/*.css'], { read: false }), { ignorePath: '.tmp' }))
-    .pipe(gulp.dest('.tmp'));
-});
-
-gulp.task('minify', ['styles', 'scripts','html'], () => {
-  return gulp.src(['.tmp/**/*.js', '.tmp/**/*.css', '.tmp/**/*.html'])
-    .pipe($.if(/\.html$/, $.replace(/\.tmp\/([^"]*)/g, (path) => {
-      return path.join('', 'dist', path);
-    })))
-    .pipe($.if(/\.html$/, $.htmlmin({
+  const dst = dev ? devDir : prodDir; 
+  return gulp.src(path.join(srcDir, '**', '*.html'))
+    .pipe($.inject(gulp.src(path.join(dst, '**', '*.{js,css}'), { read: false }), { ignorePath: dst }))
+    .pipe($.if(!dev, $.htmlmin({
       collapseWhitespace: true,
       minifyCSS: true,
       minifyJS: { compress: { drop_console: true } },
@@ -128,7 +126,7 @@ gulp.task('minify', ['styles', 'scripts','html'], () => {
       removeScriptTypeAttributes: true,
       removeStyleLinkTypeAttributes: true
     })))
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest(dst));
 });
 
 gulp.task('images', () => {
@@ -234,7 +232,7 @@ gulp.task('wiredep', () => {
     .pipe(gulp.dest('app'));
 });
 
-gulp.task('build', ['lint', 'html', 'images', 'fonts', 'extras', 'minify'], () => {
+gulp.task('build', ['lint', 'html', 'images', 'fonts', 'extras'], () => {
   return gulp.src('dist/**/*').pipe($.size({title: 'build', gzip: true}));
 });
 
