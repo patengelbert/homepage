@@ -1,4 +1,3 @@
-// generated on 2017-02-10 using generator-webapp 2.4.1
 const gulp = require('gulp');
 const path = require('path');
 const util = require("gulp-util");
@@ -16,37 +15,56 @@ const buffer = require('vinyl-buffer');
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
 
-var dev = !util.env.production;
+const dev = !util.env.production;
 
 if (dev) {
   var karma = require('karma');
   var backstop = require('backstopjs');
 }
 
+var getBundleName = function (min = false) {
+  var version = require('./package.json').version;
+  var name = require('./package.json').name;
+  return version + '.' + name + (min ? '.min' : '');
+};
+
 gulp.task('styles', () => {
-  return gulp.src(['app/styles/*.css', 'app/styles/*.scss'])
+  return gulp.src('app/styles/*.{css,scss}')
+    .pipe($.plumber())  
+    .pipe($.stylelint({
+      reporters: [
+        {formatter: 'string', console: true}
+      ],
+      failAfterError: false,
+      debug: dev
+    }))
+    .pipe($.stylefmt())  
     .pipe($.if(/\.scss$/, $.sass().on('error', $.sass.logError)))
     .pipe($.if(dev, $.sourcemaps.init()))
-    .pipe($.autoprefixer({browsers: ['> 1%', 'last 2 versions', 'Firefox ESR']}))
+    .pipe($.autoprefixer({ browsers: ['> 1%', 'last 2 versions', 'Firefox ESR'] }))
+    .pipe($.if(!dev, $.cssnano({ safe: true, autoprefixer: false })))
     .pipe($.if(dev, $.sourcemaps.write()))
-    .pipe(gulp.dest('.tmp/styles'))
+    .pipe($.rename(getBundleName(!dev) + '.css'))
+    .pipe(gulp.dest(path.join((dev ? '.tmp' : 'dist'), 'styles')))
     .pipe(reload({stream: true}));
 });
 
-gulp.task('scripts', () => {
+gulp.task('scripts', ['lint'], () => {
   return browserify({ entries: 'app/scripts/app.js', debug: dev })
     .transform(rollupify, babelify)
     .bundle()
     .on('error', function (err) {
         console.log(err.toString());
         this.emit("end");
-    })  
-    .pipe(source('app.js'))
+    })
+    .pipe(source(getBundleName(!dev) + '.js'))
     .pipe($.plumber())
     .pipe(buffer())
     .pipe($.if(dev, $.sourcemaps.init({ loadMaps: true })))
+    .pipe($.if(!dev, $.uglify({ compress: { drop_console: true } })))
+    .pipe($.concat(getBundleName(!dev) + '.js'))
     .pipe($.if(dev, $.sourcemaps.write('.')))
-    .pipe(gulp.dest('.tmp/scripts'))
+    .pipe(gulp.dest(path.join((dev ? '.tmp' : 'dist'), 'scripts')))
     .pipe(reload({ stream: true }));
 });
 
@@ -68,7 +86,7 @@ gulp.task('lint:test', () => {
     .pipe(gulp.dest('test/spec'));
 });
 
-gulp.task('html', ['styles', 'scripts'], () => {
+gulp.task('html', ['lint', 'styles', 'scripts'], () => {
   return gulp.src('app/**/*.html')
     .pipe($.inject(gulp.src(['.tmp/**/*.js', '.tmp/**/*.css'], { read: false }), { ignorePath: '.tmp' }))
     .pipe(gulp.dest('.tmp'));
@@ -76,8 +94,6 @@ gulp.task('html', ['styles', 'scripts'], () => {
 
 gulp.task('minify', ['styles', 'scripts','html'], () => {
   return gulp.src(['.tmp/**/*.js', '.tmp/**/*.css', '.tmp/**/*.html'])
-    .pipe($.if(/\.js$/, $.uglify({ compress: { drop_console: true } })))
-    .pipe($.if(/\.css$/, $.cssnano({ safe: true, autoprefixer: false })))
     .pipe($.if(/\.html$/, $.replace(/\.tmp\/([^"]*)/g, (path) => {
       return path.join('', 'dist', path);
     })))
@@ -136,7 +152,7 @@ gulp.task('serve', () => {
     ]).on('change', reload);
 
     gulp.watch('app/**/*.html', ['html']);    
-    gulp.watch(['app/styles/**/*.css', 'app/styles/**/*.scss'], ['styles']);
+    gulp.watch('app/styles/**/*.{css,scss}', ['styles']);
     gulp.watch('app/scripts/**/*.js', ['scripts']);
     gulp.watch('app/fonts/**/*', ['fonts']);
     gulp.watch('bower.json', ['wiredep', 'fonts']);
@@ -166,7 +182,7 @@ gulp.task('test:css:showreport', () =>
   backstop('openReport')  
 );
 
-gulp.task('test:js', (done) => {
+gulp.task('test:js', ['lint:test'], (done) => {
   new karma.Server({
     configFile: path.join(__dirname, 'karma.conf.js'),
     singleRun: true
