@@ -13,12 +13,7 @@ const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
 const merge = require('merge');
 
-const $ = gulpLoadPlugins({
-  rename:
-  {
-    'gulp-main-bower-files': 'mainBowerFiles'
-  }
-});
+const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
 
 const srcDir = 'app';
@@ -140,8 +135,7 @@ gulp.task('images', () => {
 });
 
 gulp.task('fonts', () => {
-  return gulp.src('./bower.json')
-    .pipe($.mainBowerFiles())
+  return gulp.src(require('main-bower-files')().concat(path.join(srcDir, 'fonts','**','*')))
     .pipe($.filter('**/*.{eot,svg,ttf,woff,woff2}'))
     .pipe($.flatten())
     .pipe(gulp.dest(path.join((dev ? devDir: prodDir), 'fonts')));
@@ -159,39 +153,30 @@ gulp.task('extras', () => {
 gulp.task('clean', del.bind(null, [devDir, prodDir]));
 
 gulp.task('serve', () => {
-  runSequence(['clean', 'wiredep'], ['styles', 'scripts', 'html', 'fonts'], () => {
+  var dir = dev ? devDir : prodDir;
+  runSequence('clean', ['styles', 'scripts', 'html', 'fonts'], () => {
     browserSync.init({
       notify: false,
-      port: 9000,
+      port: process.env.PORT || 9000,
+      open: dev ? true : false,
       server: {
-        baseDir: [devDir],
-        routes: {
+        baseDir: [dir],
+        routes: dev ? {
           '/bower_components': 'bower_components'
-        }
+        } : {}
       }
     });
+    if (dev) {
+      gulp.watch(
+        path.join(srcDir, 'images', '**', '*')
+      ).on('change', reload);
 
-    gulp.watch([
-      'app/images/**/*',
-      '.tmp/fonts/**/*'
-    ]).on('change', reload);
-
-    gulp.watch('app/**/*.html', ['html']);    
-    gulp.watch('app/styles/**/*.{css,scss}', ['styles']);
-    gulp.watch('app/scripts/**/*.js', ['scripts']);
-    gulp.watch('app/fonts/**/*', ['fonts']);
-    gulp.watch('bower.json', ['wiredep', 'fonts']);
-  });
-});
-
-gulp.task('serve:dist', ['default'], () => {
-  browserSync.init({
-    notify: false,
-    port: process.env.PORT || 9000,
-    open: false,
-    server: {
-      baseDir: ['dist']
-    }
+      gulp.watch(path.join(srcDir, '**', '*.html'), ['html']);
+      gulp.watch(path.join(srcDir, '**', '*.{css, scss}'), ['styles']);
+      gulp.watch(path.join(srcDir, '**', '*.{js, jsx}'), ['scripts']);
+      gulp.watch(path.join(srcDir, 'fonts', '**', '*'), ['fonts']);
+      gulp.watch('bower.json', ['wiredep', 'fonts']);
+    }  
   });
 });
 
@@ -229,21 +214,12 @@ gulp.task('test:js:server', (done) => {
   }).start();
 });
 
-// inject bower components
-gulp.task('wiredep', () => {
-  gulp.src('app/*.html')
-    .pipe(wiredep({
-      ignorePath: /^(\.\.\/)*\.\./
-    }))
-    .pipe(gulp.dest('app'));
-});
-
 gulp.task('build', ['lint', 'html', 'images', 'fonts', 'extras'], () => {
-  return gulp.src('dist/**/*').pipe($.size({title: 'build', gzip: true}));
+  return gulp.src(path.join((dev ? devDir: prodDir), '**','*')).pipe($.size({title: 'build:' + (dev ? 'dev': 'prod'), gzip: true}));
 });
 
 gulp.task('default', () => {
   return new Promise(resolve => {
-    runSequence(['clean', 'wiredep'], 'build', resolve);
+    runSequence('clean', 'build', resolve);
   });
 });
