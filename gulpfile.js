@@ -105,6 +105,8 @@ gulp.task('lint:test', () => {
     .pipe(gulp.dest('test/spec'));
 });
 
+gulp.task('lint', ['lint:styles', 'lint:scripts', 'lint:html']);
+
 gulp.task('html', ['lint', 'styles', 'scripts'], () => {
   return gulp.src('app/**/*.html')
     .pipe($.inject(gulp.src(['.tmp/**/*.js', '.tmp/**/*.css'], { read: false }), { ignorePath: '.tmp' }))
