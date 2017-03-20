@@ -1,6 +1,12 @@
 {
   "name": "patrick-webpage",
-  "private": true,
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {},
+  "overrides": {
+    "google-fonts": {
+      "main": [
+        "**/*.ttf"
+      ]
+    }
+  }
 }

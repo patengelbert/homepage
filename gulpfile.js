@@ -13,7 +13,12 @@ const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
 const merge = require('merge');
 
-const $ = gulpLoadPlugins();
+const $ = gulpLoadPlugins({
+  rename:
+  {
+    'gulp-main-bower-files': 'mainBowerFiles'
+  }
+});
 const reload = browserSync.reload;
 
 const srcDir = 'app';
@@ -48,7 +53,7 @@ gulp.task('styles', ['lint:styles'], () => {
 });
 
 gulp.task('scripts', ['lint:scripts'], () => {
-  return browserify({ entries: path.join(srcDir, 'scripts', 'app.js'), debug: dev })
+  return browserify({ entries: path.join(srcDir, 'scripts', 'app.js'), debug: dev})
     .transform(rollupify, babelify)
     .bundle()
     .on('error', function (err) {
@@ -97,8 +102,7 @@ gulp.task('lint:styles', () => {
       reporters: [
         { formatter: 'string', console: true }
       ],
-      failAfterError: false,
-      debug: dev
+      failAfterError: false
     }))
     .pipe(reload({ stream: true, once: true }))
     .pipe($.stylefmt())
@@ -130,27 +134,29 @@ gulp.task('html', ['lint', 'styles', 'scripts'], () => {
 });
 
 gulp.task('images', () => {
-  return gulp.src('app/images/**/*')
+  return gulp.src(path.join(srcDir, 'images', '**', '*'))
     .pipe($.cache($.imagemin()))
-    .pipe(gulp.dest('dist/images'));
+    .pipe(gulp.dest(path.join((dev ? devDir: prodDir), 'images')));
 });
 
 gulp.task('fonts', () => {
-  return gulp.src(require('main-bower-files')('**/*.{eot,svg,ttf,woff,woff2}', (err) => {})
-    .concat('app/fonts/**/*'))
-    .pipe($.if(dev, gulp.dest('.tmp/fonts'), gulp.dest('dist/fonts')));
+  return gulp.src('./bower.json')
+    .pipe($.mainBowerFiles())
+    .pipe($.filter('**/*.{eot,svg,ttf,woff,woff2}'))
+    .pipe($.flatten())
+    .pipe(gulp.dest(path.join((dev ? devDir: prodDir), 'fonts')));
 });
 
 gulp.task('extras', () => {
   return gulp.src([
-    'app/*',
-    '!app/*.html'
+    path.join(srcDir, '*.*'),
+    '!' + path.join(srcDir, '*.html')
   ], {
     dot: true
-  }).pipe(gulp.dest('dist'));
+  }).pipe(gulp.dest(dev ? devDir: prodDir));
 });
 
-gulp.task('clean', del.bind(null, ['.tmp', 'dist']));
+gulp.task('clean', del.bind(null, [devDir, prodDir]));
 
 gulp.task('serve', () => {
   runSequence(['clean', 'wiredep'], ['styles', 'scripts', 'html', 'fonts'], () => {
@@ -158,7 +164,7 @@ gulp.task('serve', () => {
       notify: false,
       port: 9000,
       server: {
-        baseDir: ['.tmp'],
+        baseDir: [devDir],
         routes: {
           '/bower_components': 'bower_components'
         }
