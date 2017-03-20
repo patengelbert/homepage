@@ -11,6 +11,7 @@ const babelify = require('babelify');
 const rollupify = require('rollupify');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
+const merge = require('merge');
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
@@ -28,17 +29,9 @@ var getBundleName = function (min = false) {
   return version + '.' + name + (min ? '.min' : '');
 };
 
-gulp.task('styles', () => {
+gulp.task('styles', ['lint:styles'], () => {
   return gulp.src('app/styles/*.{css,scss}')
-    .pipe($.plumber())  
-    .pipe($.stylelint({
-      reporters: [
-        {formatter: 'string', console: true}
-      ],
-      failAfterError: false,
-      debug: dev
-    }))
-    .pipe($.stylefmt())  
+    .pipe($.plumber())
     .pipe($.if(/\.scss$/, $.sass().on('error', $.sass.logError)))
     .pipe($.if(dev, $.sourcemaps.init()))
     .pipe($.autoprefixer({ browsers: ['> 1%', 'last 2 versions', 'Firefox ESR'] }))
@@ -49,7 +42,7 @@ gulp.task('styles', () => {
     .pipe(reload({stream: true}));
 });
 
-gulp.task('scripts', ['lint'], () => {
+gulp.task('scripts', ['lint:scripts'], () => {
   return browserify({ entries: 'app/scripts/app.js', debug: dev })
     .transform(rollupify, babelify)
     .bundle()
@@ -68,21 +61,47 @@ gulp.task('scripts', ['lint'], () => {
     .pipe(reload({ stream: true }));
 });
 
-function lint(files) {
+function lint(files, param = {}) {
   return gulp.src(files)
-    .pipe($.eslint({ fix: true }))
+    .pipe($.eslint(merge({ fix: true }, param)))
     .pipe(reload({stream: true, once: true}))
     .pipe($.eslint.format())
     .pipe($.if(!browserSync.active, $.eslint.failAfterError()));
 }
 
-gulp.task('lint', () => {
-  return lint(['app/*.html', 'app/**/*.js'])
+gulp.task('lint:scripts', () => {
+  return lint(['app/**/*.{js, jsx}'])
+    .pipe(gulp.dest('app'));
+});
+
+gulp.task('lint:html', () => {
+  return gulp.src('app/**/*.html')
+    .pipe($.htmlLint())
+    .pipe($.htmlLint.format())
+    .pipe($.if(!browserSync.active, $.htmlLint.failAfterError()))
+    .pipe($.eslint({ fix: true }))
+    .pipe(reload({ stream: true, once: true }))
+    .pipe($.eslint.format())
+    .pipe($.if(!browserSync.active, $.eslint.failAfterError()))
+    .pipe(gulp.dest('app'));
+});
+
+gulp.task('lint:styles', () => {
+  return gulp.src('app/**/*.{css,scss}')
+    .pipe($.stylelint({
+      reporters: [
+        { formatter: 'string', console: true }
+      ],
+      failAfterError: false,
+      debug: dev
+    }))
+    .pipe(reload({ stream: true, once: true }))
+    .pipe($.stylefmt())
     .pipe(gulp.dest('app'));
 });
 
 gulp.task('lint:test', () => {
-  return lint('test/spec/**/*.js')
+  return lint('test/spec/**/*.{js, jsx}', {envs: ['mocha']})
     .pipe(gulp.dest('test/spec'));
 });
 

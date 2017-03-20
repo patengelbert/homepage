@@ -7,7 +7,4 @@
  */
 export default function printHello() {
   return 'Hello World!';
-};
-
-
-window.onload = console.log(printHello());
+}
