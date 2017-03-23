@@ -12,6 +12,7 @@ const rollupify = require('rollupify');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
 const merge = require('merge');
+const bowerMain = require('bower-main');
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
@@ -27,6 +28,9 @@ if (dev) {
   var karma = require('karma');
   var backstop = require('backstopjs');
 }
+
+const bowerMainJavaScriptFiles = bowerMain('js','min.js');
+const bowerMainCSSFiles = bowerMain('css','min.css');
 
 var getBundleName = function (min = false) {
   var version = require('./package.json').version;
@@ -112,9 +116,12 @@ gulp.task('lint:test', () => {
 gulp.task('lint', ['lint:styles', 'lint:scripts', 'lint:html']);
 
 gulp.task('html', ['lint', 'styles', 'scripts'], () => {
-  const dst = dev ? devDir : prodDir; 
+  const dst = dev ? devDir : prodDir;
+  const jsFiles = dev ? bowerMainJavaScriptFiles.normal : bowerMainJavaScriptFiles.minified.concat(bowerMainJavaScriptFiles.minifiedNotFound);
+  const cssFiles = dev ? bowerMainCSSFiles.normal : bowerMainCSSFiles.minified.concat(bowerMainCSSFiles.minifiedNotFound);
   return gulp.src(path.join(srcDir, '**', '*.html'))
     .pipe($.inject(gulp.src(path.join(dst, '**', '*.{js,css}'), { read: false }), { ignorePath: dst }))
+    .pipe($.inject(gulp.src(jsFiles.concat(cssFiles), {read: false}), {name: 'bower'}))
     .pipe($.if(!dev, $.htmlmin({
       collapseWhitespace: true,
       minifyCSS: true,
@@ -206,7 +213,7 @@ gulp.task('test', ['test:js']);
 /**
  * Watch for file changes and re-run tests on each change
  */
-gulp.task('test:js:server', (done) => {
+gulp.task('test:js:server', ['lint:test'], (done) => {
   new karma.Server({
     configFile: path.join(__dirname, 'karma.conf.js')
   }, () => {
