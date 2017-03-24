@@ -17,7 +17,8 @@ const bowerMain = require('bower-main');
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
 
-const srcDir = 'app';
+const appDir = 'homepage';
+const srcDir = path.join(appDir, 'resources');
 const testDir = 'test';
 const devDir = '.tmp';
 const prodDir = 'dist';
@@ -30,7 +31,11 @@ if (dev) {
 }
 
 const bowerMainJavaScriptFiles = bowerMain('js','min.js');
-const bowerMainCSSFiles = bowerMain('css','min.css');
+const bowerMainCSSFiles = bowerMain('css', 'min.css');
+
+const dst = dev ? devDir : prodDir;
+const jsVendorFiles = dev ? bowerMainJavaScriptFiles.normal : bowerMainJavaScriptFiles.minified.concat(bowerMainJavaScriptFiles.minifiedNotFound);
+const cssVendorFiles = dev ? bowerMainCSSFiles.normal : bowerMainCSSFiles.minified.concat(bowerMainCSSFiles.minifiedNotFound);
 
 var getBundleName = function (min = false) {
   var version = require('./package.json').version;
@@ -47,7 +52,7 @@ gulp.task('styles', ['lint:styles'], () => {
     .pipe($.if(!dev, $.cssnano({ safe: true, autoprefixer: false })))
     .pipe($.if(dev, $.sourcemaps.write()))
     .pipe($.rename(getBundleName(!dev) + '.css'))
-    .pipe(gulp.dest(path.join((dev ? devDir : prodDir), 'styles')))
+    .pipe(gulp.dest(path.join(dst, 'styles')))
     .pipe(reload({stream: true}));
 });
 
@@ -66,7 +71,7 @@ gulp.task('scripts', ['lint:scripts'], () => {
     .pipe($.if(!dev, $.uglify({ compress: { drop_console: true } })))
     .pipe($.concat(getBundleName(!dev) + '.js'))
     .pipe($.if(dev, $.sourcemaps.write('.')))
-    .pipe(gulp.dest(path.join((dev ? devDir : prodDir), 'scripts')))
+    .pipe(gulp.dest(path.join(dst, 'scripts')))
     .pipe(reload({ stream: true }));
 });
 
@@ -115,13 +120,26 @@ gulp.task('lint:test', () => {
 
 gulp.task('lint', ['lint:styles', 'lint:scripts', 'lint:html']);
 
-gulp.task('html', ['lint', 'styles', 'scripts'], () => {
-  const dst = dev ? devDir : prodDir;
-  const jsFiles = dev ? bowerMainJavaScriptFiles.normal : bowerMainJavaScriptFiles.minified.concat(bowerMainJavaScriptFiles.minifiedNotFound);
-  const cssFiles = dev ? bowerMainCSSFiles.normal : bowerMainCSSFiles.minified.concat(bowerMainCSSFiles.minifiedNotFound);
-  return gulp.src(path.join(srcDir, '**', '*.html'))
-    .pipe($.inject(gulp.src(path.join(dst, '**', '*.{js,css}'), { read: false }), { ignorePath: dst }))
-    .pipe($.inject(gulp.src(jsFiles.concat(cssFiles), {read: false}), {name: 'bower'}))
+gulp.task('copy:vendor:js', () => {
+  return gulp.src(jsVendorFiles, {base: appDir})
+    .pipe(gulp.dest(dst));
+});
+
+gulp.task('copy:vendor:css', () => {
+  return gulp.src(cssVendorFiles, {base: appDir})
+    .pipe(gulp.dest(dst));
+});
+
+gulp.task('copy:vendor', ['copy:vendor:js', 'copy:vendor:css']);
+
+gulp.task('html', ['lint', 'styles', 'scripts', 'copy:vendor'], () => {
+  return gulp.src(path.join(appDir, '**', '*.html'))
+    .pipe($.inject(gulp.src(
+      [
+        path.join(dst, '**', '*.{js,css}'),
+        '!' + path.join(dst, 'vendor', '**', '*')
+      ], { read: false }), { ignorePath: dst }))
+    .pipe($.inject(gulp.src(cssVendorFiles.concat(jsVendorFiles), { read: false, base: appDir }), { name: 'bower' , ignorePath: appDir}))
     .pipe($.if(!dev, $.htmlmin({
       collapseWhitespace: true,
       minifyCSS: true,
@@ -138,14 +156,14 @@ gulp.task('html', ['lint', 'styles', 'scripts'], () => {
 gulp.task('images', () => {
   return gulp.src(path.join(srcDir, 'images', '**', '*'))
     .pipe($.cache($.imagemin()))
-    .pipe(gulp.dest(path.join((dev ? devDir: prodDir), 'images')));
+    .pipe(gulp.dest(path.join(dst, 'images')));
 });
 
 gulp.task('fonts', () => {
   return gulp.src(require('main-bower-files')().concat(path.join(srcDir, 'fonts','**','*')))
     .pipe($.filter('**/*.{eot,svg,ttf,woff,woff2}'))
     .pipe($.flatten())
-    .pipe(gulp.dest(path.join((dev ? devDir: prodDir), 'fonts')));
+    .pipe(gulp.dest(path.join(dst, 'fonts')));
 });
 
 gulp.task('extras', () => {
@@ -154,23 +172,19 @@ gulp.task('extras', () => {
     '!' + path.join(srcDir, '*.html')
   ], {
     dot: true
-  }).pipe(gulp.dest(dev ? devDir: prodDir));
+  }).pipe(gulp.dest(dst));
 });
 
 gulp.task('clean', del.bind(null, [devDir, prodDir]));
 
 gulp.task('serve', () => {
-  var dir = dev ? devDir : prodDir;
   runSequence('clean', ['styles', 'scripts', 'html', 'fonts'], () => {
     browserSync.init({
       notify: false,
       port: process.env.PORT || 9000,
       open: dev ? true : false,
       server: {
-        baseDir: [dir],
-        routes: dev ? {
-          '/bower_components': 'bower_components'
-        } : {}
+        baseDir: [dst]
       }
     });
     if (dev) {
@@ -222,7 +236,7 @@ gulp.task('test:js:server', ['lint:test'], (done) => {
 });
 
 gulp.task('build', ['lint', 'html', 'images', 'fonts', 'extras'], () => {
-  return gulp.src(path.join((dev ? devDir: prodDir), '**','*')).pipe($.size({title: 'build:' + (dev ? 'dev': 'prod'), gzip: true}));
+  return gulp.src(path.join(dst, '**','*')).pipe($.size({title: 'build:' + (dev ? 'dev': 'prod'), gzip: true}));
 });
 
 gulp.task('default', () => {

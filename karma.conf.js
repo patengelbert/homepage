@@ -4,10 +4,10 @@ module.exports = function(config) {
     frameworks: ['browserify', 'mocha', 'chai'],
     browsers: ['PhantomJS'],
     preprocessors:
-        {'app/**/*.js': ['browserify'], 'test/**/*.js': ['browserify']},
+        {'homepage/resources/**/*.js': ['browserify'], 'test/**/*.js': ['browserify']},
     files: [
       'node_modules/babel-polyfill/dist/polyfill.js',
-      'app/scripts/**/*.js',
+      'homepage/resources/scripts/**/*.js',
       'test/**/*.js'
     ],
     reporters: ['dots'],
