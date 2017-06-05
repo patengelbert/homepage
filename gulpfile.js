@@ -178,7 +178,7 @@ gulp.task('extras', () => {
 gulp.task('clean', del.bind(null, [devDir, prodDir]));
 
 gulp.task('serve', () => {
-  runSequence('clean', ['styles', 'scripts', 'html', 'fonts'], () => {
+  runSequence('clean', ['styles', 'scripts', 'html', 'fonts', 'images'], () => {
     browserSync.init({
       notify: false,
       port: process.env.PORT || 9000,
