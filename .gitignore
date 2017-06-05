@@ -10,3 +10,5 @@ backstop_data/*/
 *.log
 
 .vscode/
+
+**/vendor/
