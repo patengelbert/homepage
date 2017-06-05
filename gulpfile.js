@@ -19,7 +19,7 @@ const bowerMain = require('bower-main');
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
 
-const appDir = 'homepage';
+const appDir = 'app';
 const srcDir = path.join(appDir, 'resources');
 const pageDir = path.join(appDir, 'pages');
 const templateDir = path.join(appDir, 'templates');
