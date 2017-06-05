@@ -20,6 +20,11 @@
       "name": "computer",
       "width": 1920,
       "height": 1080
+    },
+    {
+      "name": "computer_hidpi",
+      "width": 3840,
+      "height": 2180
     }
   ],
   "scenarios": [
