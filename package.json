@@ -12,6 +12,8 @@
   "devDependencies": {
     "backstopjs": "^2.7.2",
     "chai": "^3.5.0",
+    "gulp-data": "^1.2.1",
+    "gulp-nunjucks-render": "^2.2.1",
     "karma": "^1.4.1",
     "karma-babel-preprocessor": "^6.0.1",
     "karma-browserify": "^5.1.1",

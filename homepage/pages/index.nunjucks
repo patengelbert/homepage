@@ -1,0 +1,30 @@
+<!-- index.nunjucks -->
+{% extends "layout.nunjucks" %}
+
+{% block content %}
+
+<!-- Importing Nunjucks Macro -->
+{% import 'macros/nav-macro.nunjucks' as nav %}
+
+<!-- Creating the navigation with activePage = 'home' -->
+{{nav.active('home')}}
+
+<!-- htmllint id-class-style="false" -->
+<div class="hero-unit">
+    <!-- htmllint id-class-style="$previous" -->
+    <h1 id="heading"></h1>
+    <p>Created by:</p>
+    <ul>
+        <li>{{creator.name}}</li>
+    </ul>
+</div>
+
+<div class="gallery">
+    <!-- Loops through "images" array -->
+    {% for image in images %}
+    <div class="gallery__item">
+        <img src="{{image.src}}" alt="{{image.alt}}">
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,4 +1,6 @@
-<!doctype html>
+<!-- layout.nunjucks -->
+
+<!DOCTYPE HTML>
 <html lang="">
 
 <head>
@@ -15,22 +17,13 @@
     <!-- inject:css -->
     <!-- endinject -->
 
-</head>
-
 <body>
     <!--[if IE]>
         <p class="browserupgrade">You are using an <strong>outdated</strong> browser.</p>
     <![endif]-->
 
-    <!-- htmllint id-class-style="false" -->
-    <div class="hero-unit">
-    <!-- htmllint id-class-style="$previous" -->
-        <h1 id="heading"></h1>
-        <p>Created by:</p>
-        <ul>
-            <li>Patrick Engelbert</li>
-        </ul>
-    </div>
+    <!-- You write code for this content block in another file -->
+    {% block content %} {% endblock %}
 
     <!-- bower:js -->
     <!-- bower installed scripts will go here... -->

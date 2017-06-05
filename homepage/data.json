@@ -1,0 +1,15 @@
+{
+    "creator": {
+        "name": "Patrick Engelbert"
+    },
+    "images": [
+        {
+            "src": "image-one.png",
+            "alt": "Image one alt text"
+        },
+        {
+            "src": "image-two.png",
+            "alt": "Image two alt text"
+        }
+    ]
+}

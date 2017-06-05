@@ -1,7 +1,9 @@
 const gulp = require('gulp');
+const fs = require('fs');
 const path = require('path');
 const util = require("gulp-util");
 const gulpLoadPlugins = require('gulp-load-plugins');
+const nunjucksRender = require('gulp-nunjucks-render');
 const browserSync = require('browser-sync').create();
 const del = require('del');
 const wiredep = require('wiredep').stream;
@@ -19,6 +21,8 @@ const reload = browserSync.reload;
 
 const appDir = 'homepage';
 const srcDir = path.join(appDir, 'resources');
+const pageDir = path.join(appDir, 'pages');
+const templateDir = path.join(appDir, 'templates');
 const testDir = 'test';
 const devDir = '.tmp';
 const prodDir = 'dist';
@@ -133,7 +137,17 @@ gulp.task('copy:vendor:css', () => {
 gulp.task('copy:vendor', ['copy:vendor:js', 'copy:vendor:css']);
 
 gulp.task('html', ['lint', 'styles', 'scripts', 'copy:vendor'], () => {
-  return gulp.src(path.join(appDir, '**', '*.html'))
+  return gulp.src([
+      path.join(appDir, '**', '*.html'),
+      path.join(pageDir, '**', '*.nunjucks')
+    ])
+    .pipe($.plumber())
+    .pipe($.data(() => {
+      return JSON.parse(fs.readFileSync(path.join(appDir, 'data.json')))
+    }))
+    .pipe($.nunjucksRender({
+      path: [templateDir]
+    }))  
     .pipe($.inject(gulp.src(
       [
         path.join(dst, '**', '*.{js,css}'),
